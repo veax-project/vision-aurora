@@ -18,28 +18,33 @@ The shapes are untouched.
 
 ## Install
 
-**Per user, no admin rights.** Open PowerShell where you cloned it:
+### 📥 [Download Vision-Aurora.zip](../../releases/latest)
+
+Unzip it, **double-click `install.bat`**. That is the whole thing.
+
+It copies the cursors into your own user folder and switches to them straight away — no
+administrator rights, no restart. `uninstall.bat` puts the Windows defaults back.
+
+> If nothing happens when you run it: Windows blocks files that came from the internet.
+> Right-click `install.bat` → Properties → tick **Unblock** at the bottom → try again.
+
+<details>
+<summary><b>Other ways to install</b></summary>
+
+**From a clone** — open PowerShell in the repository root:
 
 ```powershell
 .\install.ps1 vision-aurora
 ```
 
-The cursors apply immediately — no sign-out, no reboot. To go back:
+To go back: `.\install.ps1 -Uninstall vision-aurora`
 
-```powershell
-.\install.ps1 -Uninstall vision-aurora
-```
+**Right-click install** — right-click `install.inf`, choose **Install**. This one writes into
+`C:\Windows\Cursors`, so it asks for administrator rights. The scheme then appears under
+Settings → Bluetooth & devices → Mouse → Additional mouse settings → Pointers.
 
-<details>
-<summary><b>Other ways to install</b></summary>
-
-**Right-click install** — open `packs\vision-aurora\`, right-click `install.inf`, choose
-**Install**. This writes into `C:\Windows\Cursors`, so it asks for administrator rights. The
-scheme then appears under Settings → Bluetooth & devices → Mouse → Additional mouse settings
-→ Pointers.
-
-**By hand** — Control Panel → Mouse → Pointers, then point each role at the matching file in
-`packs\vision-aurora\`. Save it as a scheme so you can switch back.
+**By hand** — Control Panel → Mouse → Pointers, then point each role at the matching file.
+Save it as a scheme so you can switch back.
 
 </details>
 

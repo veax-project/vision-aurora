@@ -6,7 +6,8 @@
   "private": true,
   "scripts": {
     "build": "node src/build.mjs",
-    "preview": "node src/preview.mjs"
+    "preview": "node src/sheet.mjs vision-aurora 3",
+    "zip": "node src/zip.mjs vision-aurora"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2"

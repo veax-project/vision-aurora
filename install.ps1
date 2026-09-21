@@ -28,9 +28,12 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# Two layouts are supported: the repository, where packs sit under packs\, and a
+# downloaded zip, where the cursors and this script sit in one folder together.
+$Standalone = Test-Path (Join-Path $PSScriptRoot 'pack.json')
 $PacksRoot = Join-Path $PSScriptRoot 'packs'
-if (-not (Test-Path $PacksRoot)) {
-    throw "No packs\ folder next to this script. Run it from the repository root."
+if (-not $Standalone -and -not (Test-Path $PacksRoot)) {
+    throw "No pack.json and no packs\ folder next to this script."
 }
 
 # Registry value name -> file name, read from the pack's own manifest. The
@@ -40,12 +43,12 @@ function Get-PackManifest {
     param([string]$PackDir)
     $file = Join-Path $PackDir 'pack.json'
     if (-not (Test-Path $file)) {
-        throw "No pack.json in $PackDir. Run 'npm run build' first."
+        throw "No pack.json in $PackDir."
     }
     $json = Get-Content $file -Raw | ConvertFrom-Json
     $roles = [ordered]@{}
     foreach ($role in $json.order) { $roles[$role] = $json.roles.$role }
-    return @{ Name = $json.name; Roles = $roles; Animated = $json.animated }
+    return @{ Id = $json.id; Name = $json.name; Roles = $roles; Animated = $json.animated }
 }
 
 # Asks Windows to reload the cursors so the change shows up without a sign-out.
@@ -60,7 +63,13 @@ public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, IntP
     [void][AuroraNative]::SystemParametersInfo(0x0057, 0, [IntPtr]::Zero, 0x02)
 }
 
-$available = Get-ChildItem -Path $PacksRoot -Directory | Select-Object -ExpandProperty Name
+if ($Standalone) {
+    $source = $PSScriptRoot
+    $Pack = (Get-PackManifest $source).Id
+    $available = @($Pack)
+} else {
+    $available = @(Get-ChildItem -Path $PacksRoot -Directory | Select-Object -ExpandProperty Name)
+}
 
 if (-not $Pack) {
     Write-Host ''
@@ -82,7 +91,7 @@ if ($available -notcontains $Pack) {
     throw "Unknown pack '$Pack'. Available: $($available -join ', ')"
 }
 
-$source = Join-Path $PacksRoot $Pack
+if (-not $Standalone) { $source = Join-Path $PacksRoot $Pack }
 $target = Join-Path $env:LOCALAPPDATA "Microsoft\Windows\Cursors\$Pack"
 $manifest = Get-PackManifest $source
 $Roles = $manifest.Roles
@@ -104,13 +113,17 @@ if ($Uninstall) {
 
 foreach ($file in $Roles.Values) {
     if (-not (Test-Path (Join-Path $source $file))) {
-        throw "Pack '$Pack' is missing $file. Run 'npm run build' first."
+        throw "Pack '$Pack' is missing $file."
     }
 }
 
 New-Item -ItemType Directory -Path $target -Force | Out-Null
-Copy-Item -Path (Join-Path $source '*.cur') -Destination $target -Force
-Copy-Item -Path (Join-Path $source '*.ani') -Destination $target -Force
+
+# Copy exactly what the manifest lists. A *.cur wildcard throws when a pack is
+# animated and holds nothing but .ani files, which is the usual case here.
+foreach ($file in $Roles.Values) {
+    Copy-Item -Path (Join-Path $source $file) -Destination $target -Force
+}
 
 if (-not (Test-Path $schemesKey)) { New-Item -Path $schemesKey -Force | Out-Null }
 
