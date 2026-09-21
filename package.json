@@ -1,0 +1,14 @@
+{
+  "name": "vision-aurora",
+  "version": "1.0.0",
+  "description": "Remix and generator tooling for the Vision Aurora cursor pack.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "node src/build.mjs",
+    "preview": "node src/preview.mjs"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}
