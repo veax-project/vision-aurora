@@ -128,11 +128,6 @@ Preview a built pack with `node src/sheet.mjs vision-aurora`.
 
 ---
 
-## Credit
-
-The original **Vision Black** artwork is mine, published earlier under the name Darques.
-This repository is that pack retouched, with the tooling that did it.
-
 ## Licence
 
 [MIT](LICENSE) — use them, change them, ship them. Attribution welcome, not required.
