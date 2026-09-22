@@ -1,11 +1,11 @@
 {
   "name": "vision-black",
   "version": "1.0.0",
-  "description": "The Vision Black cursor pack for Windows, with the tooling that packages it.",
+  "description": "The Vision Black cursor pack for Windows.",
   "type": "module",
   "private": true,
   "scripts": {
     "preview": "node src/sheet.mjs vision-black",
-    "zip": "node src/zip.mjs vision-black"
+    "zip": "node src/zip.mjs vision-black Vision-Black"
   }
 }

@@ -1,5 +1,4 @@
 node_modules/
 *.log
 .tmp/
-dbg.png
 dist/*.zip

@@ -1,42 +1,24 @@
-import { mkdirSync, writeFileSync, rmSync, copyFileSync, readdirSync, existsSync } from 'node:fs';
-import { join, dirname, extname, basename } from 'node:path';
+import { mkdirSync, rmSync, copyFileSync, readFileSync, writeFileSync, readdirSync, existsSync, statSync } from 'node:fs';
+import { join, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { buildInfFrom } from './lib/inf.mjs';
-
 /**
- * Packages an existing folder of cursors as a pack, byte for byte.
+ * Copies a cursor pack into packs/, unchanged.
  *
- *   node src/adopt.mjs <source folder> <pack name> ["Display Name"]
+ *   node src/adopt.mjs <source folder> <pack name> [old credit] [new credit]
  *
- * Unlike remix.mjs this changes nothing about the artwork. It only adds what is
- * needed to install it: a manifest for install.ps1 and a fresh install.inf for
- * the right-click route.
+ * The cursors and the .inf are copied byte for byte. The only thing this will
+ * rewrite is the credit line in the .inf, and only when told which name to
+ * replace — everything else about the pack is left exactly as its author made
+ * it, including the .inf's own scheme name and install directory.
  */
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const AUTHOR = process.env.CURSOR_AUTHOR || 'veax';
 
-const ROLES = {
-  pointer: 'Arrow', help: 'Help', work: 'AppStarting', busy: 'Wait',
-  cross: 'Crosshair', text: 'IBeam', handwriting: 'NWPen', unavailiable: 'No',
-  vert: 'SizeNS', horz: 'SizeWE', dgn1: 'SizeNWSE', dgn2: 'SizeNESW',
-  move: 'SizeAll', alternate: 'UpArrow', link: 'Hand', person: 'Person', pin: 'Pin',
-};
-
-const ORDER = [
-  'pointer', 'help', 'work', 'busy', 'cross', 'text', 'handwriting',
-  'unavailiable', 'vert', 'horz', 'dgn1', 'dgn2', 'move', 'alternate',
-  'link', 'person', 'pin',
-];
-
-const source = process.argv[2];
-const packId = process.argv[3];
-const displayName = process.argv[4]
-  || (packId || '').split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+const [source, packId, oldCredit, newCredit] = process.argv.slice(2);
 
 if (!source || !existsSync(source) || !packId) {
-  console.error('usage: node src/adopt.mjs <source folder> <pack name> ["Display Name"]');
+  console.error('usage: node src/adopt.mjs <source folder> <pack name> [old credit] [new credit]');
   process.exit(1);
 }
 
@@ -44,47 +26,35 @@ const out = join(ROOT, 'packs', packId);
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 
-const roles = {};
+let cursors = 0;
 let bytes = 0;
 
 for (const file of readdirSync(source)) {
   const ext = extname(file).toLowerCase();
-  if (!['.cur', '.ani'].includes(ext)) continue;
-  const key = basename(file, extname(file));
-  if (!ROLES[key]) {
-    console.log(`  skipping ${file} — not a cursor role this pack knows`);
+  const from = join(source, file);
+  const to = join(out, file);
+
+  if (ext === '.inf' && oldCredit && newCredit) {
+    // latin1 keeps every byte intact: an .inf is not necessarily UTF-8, and a
+    // lossy round-trip through it would corrupt any accented name in there.
+    const text = readFileSync(from, 'latin1');
+    const patched = text.split(oldCredit).join(newCredit);
+    writeFileSync(to, patched, 'latin1');
+    const hits = text.split(oldCredit).length - 1;
+    console.log(`  ${file.padEnd(20)} credit rewritten (${hits} occurrence${hits === 1 ? '' : 's'})`);
+    bytes += statSync(to).size;
     continue;
   }
-  copyFileSync(join(source, file), join(out, file));
-  roles[ROLES[key]] = file;
-  bytes += (await import('node:fs')).statSync(join(out, file)).size;
-  console.log(`  ${file}`);
+
+  if (!['.cur', '.ani', '.inf'].includes(ext)) {
+    console.log(`  ${file.padEnd(20)} skipped`);
+    continue;
+  }
+
+  copyFileSync(from, to);
+  if (ext !== '.inf') cursors++;
+  bytes += statSync(to).size;
+  console.log(`  ${file.padEnd(20)} copied`);
 }
 
-const present = ORDER.filter((k) => roles[ROLES[k]]);
-const missing = ORDER.filter((k) => !roles[ROLES[k]]);
-if (missing.length) console.log(`\n  note: no source file for ${missing.join(', ')}`);
-
-const pack = {
-  id: packId,
-  name: displayName,
-  tagline: 'Rounded, minimal, dark. Seventeen cursors and two animated ones.',
-  animated: false,
-};
-
-writeFileSync(join(out, 'pack.json'), `${JSON.stringify({
-  ...pack,
-  order: present.map((k) => ROLES[k]),
-  roles,
-}, null, 2)}\n`);
-
-if (!missing.length) {
-  writeFileSync(
-    join(out, 'install.inf'),
-    buildInfFrom(pack, present.map((k) => [k, ROLES[k], roles[ROLES[k]]]), AUTHOR),
-  );
-} else {
-  console.log('  skipping install.inf — the scheme is incomplete');
-}
-
-console.log(`\nDone — ${present.length} cursors, ${(bytes / 1024 / 1024).toFixed(1)} MB in packs/${packId}/`);
+console.log(`\nDone — ${cursors} cursors, ${(bytes / 1024 / 1024).toFixed(1)} MB in packs/${packId}/`);
