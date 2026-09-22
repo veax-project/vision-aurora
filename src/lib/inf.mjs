@@ -1,21 +1,3 @@
-import { CURSORS } from '../shapes.mjs';
-
-/** Registry key names, in the order Windows expects them in a scheme string. */
-const SCHEME_ORDER = [
-  'pointer', 'help', 'work', 'busy', 'cross', 'text', 'handwriting',
-  'unavailiable', 'vert', 'horz', 'dgn1', 'dgn2', 'move', 'alternate',
-  'link', 'person', 'pin',
-];
-
-/**
- * A pack that animates every cursor ships .ani throughout, so the extension
- * depends on the theme, not just on whether the shape itself moves.
- */
-export function fileName(theme, cursor) {
-  const base = cursor.file.replace(/\.(cur|ani)$/, '');
-  return theme.animateAll || cursor.frames ? `${base}.ani` : `${base}.cur`;
-}
-
 /**
  * Right-click -> Install script for a scheme.
  * Writes the files under %WinDir%\Cursors\<pack> and registers both the named
@@ -70,12 +52,3 @@ ${strings}
 }
 
 
-/** Convenience wrapper for a pack built from the drawing code. */
-export function buildInf(theme, author) {
-  return buildInfFrom(
-    theme,
-    SCHEME_ORDER.map((k) => [k, CURSORS[k].role, fileName(theme, CURSORS[k])]),
-    author,
-  );
-}
-export { SCHEME_ORDER };

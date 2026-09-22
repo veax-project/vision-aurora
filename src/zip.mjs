@@ -80,21 +80,19 @@ IF WINDOWS BLOCKS THE FILE
   then try again.
 
 
-WORTH KNOWING
+${manifest.animated ? `WORTH KNOWING
 
-  These cursors are animated: the outline drifts between white, pastel mint
-  and pastel cyan over about eight seconds.
+  Every cursor in this pack is animated.
 
   Some games, remote desktop sessions and older programs force a still
   cursor. There you will see the first frame and no movement. Nothing is
   broken, that is just how Windows treats animated cursors in those places.
 
   Windows starts each cursor's animation when that cursor appears, so two
-  different cursors are not in step with each other. With colours this pale
-  it is hard to notice.
+  different cursors are not in step with each other.
 
 
-OTHER WAY IN
+` : ''}OTHER WAY IN
 
   If you would rather not run a .bat, right-click install.inf and choose
   Install. That one writes into C:\\Windows and asks for administrator

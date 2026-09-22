@@ -1,16 +1,12 @@
 <div align="center">
 
-# Vision Aurora
+# Vision Black
 
-**Windows cursors whose outline never quite settles.**
+**A rounded, minimal, dark cursor pack for Windows.**
 
-<img src="preview/before-after.png" alt="Five cursors shown twice: the original white outline on top, the thinner mint-tinted outline underneath" width="100%">
+<img src="preview/vision-black.png" alt="All 17 Vision Black cursors, shown over a dark and a light background" width="100%">
 
-Vision Black, retouched. The outline is a pixel thinner, and it drifts between
-white, pastel mint and pastel cyan over eight seconds — slow enough that it is
-never the thing you notice, only something you catch now and then.
-
-The shapes are untouched.
+Seventeen cursors, two of them animated, five resolutions each.
 
 </div>
 
@@ -18,7 +14,7 @@ The shapes are untouched.
 
 ## Install
 
-### 📥 [Download Vision-Aurora.zip](../../releases/latest)
+### 📥 [Download Vision-Black.zip](../../releases/latest)
 
 Unzip it, **double-click `install.bat`**. That is the whole thing.
 
@@ -31,105 +27,67 @@ administrator rights, no restart. `uninstall.bat` puts the Windows defaults back
 <details>
 <summary><b>Other ways to install</b></summary>
 
-**From a clone** — open PowerShell in the repository root:
-
-```powershell
-.\install.ps1 vision-aurora
-```
-
-To go back: `.\install.ps1 -Uninstall vision-aurora`
-
 **Right-click install** — right-click `install.inf`, choose **Install**. This one writes into
 `C:\Windows\Cursors`, so it asks for administrator rights. The scheme then appears under
 Settings → Bluetooth & devices → Mouse → Additional mouse settings → Pointers.
 
-**By hand** — Control Panel → Mouse → Pointers, then point each role at the matching file.
-Save it as a scheme so you can switch back.
+**From a clone** — open PowerShell in the repository root:
+
+```powershell
+.\install.ps1 vision-black
+```
+
+To go back: `.\install.ps1 -Uninstall vision-black`
+
+**By hand** — Control Panel → Mouse → Pointers, then point each role at the matching file in
+`packs\vision-black\`. Save it as a scheme so you can switch back.
 
 </details>
 
 ---
 
-## What it looks like
-
-One loop of the pointer, ten frames, eight seconds end to end:
-
-<img src="preview/vision-aurora-loop.png" alt="The pointer across ten frames of its colour loop" width="100%">
-
-All 17 cursors, over a dark and a light background:
-
-<img src="preview/vision-aurora.png" alt="All 17 cursors over a dark and a light background" width="100%">
-
----
-
-## Before you install it
-
-A `.cur` file holds one still image, so a colour that moves means **every cursor has to be a
-`.ani`**. That has consequences worth knowing up front:
-
-- ⚠️ Some applications, games and remote desktop sessions **force a static cursor** and will
-  simply show the first frame. You get a mint outline that never moves.
-- ⚠️ Windows starts each cursor's animation when that cursor first appears, so two cursors are
-  **not in sync**. Moving from the desktop to a text field can step the colour. With colours
-  this pale it is hard to spot, but it is there.
-- ⚠️ The pack is **21 MB**, because every frame carries all five resolutions up to 128 px.
-
-None of this breaks anything. It is just not the same as a plain static pack.
-
----
-
 ## What's in it
 
-17 cursors, every role Windows can assign:
+Every role Windows can assign:
 
 `pointer` `help` `work` `busy` `cross` `text` `handwriting` `unavailiable` `vert` `horz`
 `dgn1` `dgn2` `move` `alternate` `link` `person` `pin`
 
-- **Five resolutions** in every file — 32, 48, 64, 96 and 128 px.
-- **The original hotspots**, carried over untouched.
-- **The original antialiasing.** The artwork antialiases through the alpha channel, and the
-  tint is applied in proportion to how light each pixel is, so a half-blended edge pixel stays
-  half-blended — it just blends toward mint instead of white.
+- **Five resolutions** in every cursor — 32, 48, 64, 96 and 128 px, so it stays sharp at any
+  cursor size and on any DPI.
+- **Two animated cursors** — the busy spinner and the working-in-background pointer.
+- **2.3 MB** for the pack, 100 KB zipped.
 
 ---
 
-## Remix it yourself
+## The tooling
 
-The tool that made this pack works on **any** folder of `.cur` / `.ani` files:
+Three scripts, no dependencies — plain Node, nothing to install.
 
 ```bash
-npm install
-node src/remix.mjs "path/to/some/cursor/pack" output-name
+node src/adopt.mjs "path/to/cursors" pack-name "Display Name"
+npm run preview      # rebuilds the sheet above
+npm run zip          # rebuilds the download
 ```
 
-It reads every cursor, erodes one ring of outline pixels from the inner side, tints what is
-left through a colour loop, and writes a new animated pack plus its installer manifest.
-
-Two things it works out on its own rather than assuming:
-
-- **The fill colour**, sampled from the artwork. This pack's fill is dark navy, not black —
-  hardcoding black would have left speckles wherever the outline was eroded.
-- **How much of a pixel is outline**, from its brightness, so antialiased edges survive.
-
-Change the colours in one place, `OUTLINE_CYCLE` in `src/themes.mjs`:
-
-```js
-export const OUTLINE_CYCLE = ['#FFFFFF', '#C9F7DE', '#C4F0F8'];
-```
-
-Any number of anchors works; the loop always closes back to the first.
-
-Preview a built pack with `node src/sheet.mjs vision-aurora`.
+`adopt.mjs` takes any folder of `.cur` / `.ani` files and packages it: it copies the cursors
+byte for byte and adds what Windows needs to install them — a manifest for the PowerShell
+installer and a generated `install.inf` for the right-click route.
 
 | File | Role |
 |---|---|
-| `src/remix.mjs` | Retouches an existing pack |
-| `src/lib/retouch.mjs` | The outline thinning and tinting |
-| `src/lib/cycle.mjs` | The colour loop, eased at each anchor |
+| `install.ps1` | Per-user installer; works from a clone or from inside an unzipped pack |
+| `src/adopt.mjs` | Packages a folder of cursors |
+| `src/sheet.mjs` | Renders the preview sheet from the shipped files, not from a source drawing |
+| `src/zip.mjs` | Builds the download, with `install.bat` and a plain text readme |
 | `src/lib/read.mjs` | `.cur` / `.ani` readers |
 | `src/lib/cur.mjs` | `.cur` writer |
 | `src/lib/ani.mjs` | `.ani` writer (RIFF/ACON) |
-| `src/build.mjs` | Draws a pack from scratch, from the SVG shapes in `src/shapes.mjs` |
+| `src/lib/inf.mjs` | Generates `install.inf` |
+| `src/lib/png.mjs` | Minimal PNG writer, for the preview sheets |
+
+The preview sheet is built from the shipped cursor files rather than from any source artwork,
+so what you see above is exactly what installs.
 
 ---
 

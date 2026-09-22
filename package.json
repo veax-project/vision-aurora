@@ -1,15 +1,11 @@
 {
-  "name": "vision-aurora",
+  "name": "vision-black",
   "version": "1.0.0",
-  "description": "Remix and generator tooling for the Vision Aurora cursor pack.",
+  "description": "The Vision Black cursor pack for Windows, with the tooling that packages it.",
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "node src/build.mjs",
-    "preview": "node src/sheet.mjs vision-aurora 3",
-    "zip": "node src/zip.mjs vision-aurora"
-  },
-  "dependencies": {
-    "@resvg/resvg-js": "^2.6.2"
+    "preview": "node src/sheet.mjs vision-black",
+    "zip": "node src/zip.mjs vision-black"
   }
 }
